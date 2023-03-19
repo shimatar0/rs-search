@@ -4,13 +4,13 @@ pub type DocumentID = i64;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Index {
-    dictionary: HashMap<String, Vec<Posting>>,
-    total_docs_size: i32,
+    pub dictionary: HashMap<String, PostingList>,
+    pub total_docs_size: i32,
 }
 
 impl Index {
     pub fn new() -> Self {
-        let dictionary: HashMap<String, Vec<Posting>> = HashMap::new();
+        let dictionary: HashMap<String, PostingList> = HashMap::new();
         Index {
             dictionary,
             total_docs_size: 0,
@@ -41,7 +41,7 @@ pub struct PostingList {
 }
 
 impl PostingList {
-    pub fn new(postings: &[Posting]) -> Self {
+    pub fn new(postings: Vec<Posting>) -> Self {
         let mut list: LinkedList<Posting> = LinkedList::new();
         for posting in postings {
             list.push_back(posting.clone());
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn positions_list_test() {
-        let mut pos_list = PostingList::new(&[]);
+        let mut pos_list = PostingList::new((&[]).to_vec());
         let pos1 = Posting::new(1, vec![1, 2, 3]);
         let pos2 = Posting::new(2, vec![4, 5]);
         pos_list.add(pos1);

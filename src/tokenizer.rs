@@ -14,7 +14,7 @@ impl Tokenizer {
         Some(c.to_ascii_lowercase())
     }
 
-    pub fn split_func(&self, data: &[u8]) -> Vec<(String)> {
+    pub fn split_func(&self, data: &[u8]) -> Vec<String> {
         let line = from_utf8(data).unwrap_or("").trim();
         line.split_whitespace()
             .map(|word| {

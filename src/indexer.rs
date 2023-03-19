@@ -1,7 +1,5 @@
-use std::io::{BufReader, Cursor, Read};
-
 use crate::{
-    index::{DocumentID, Index},
+    index::{DocumentID, Index, Posting, PostingList},
     tokenizer::Tokenizer,
 };
 
@@ -18,23 +16,29 @@ impl Indexer {
         };
     }
 
-    pub fn update(&self, doc_id: DocumentID, cursor: &[u8]) {
-        let position: i32;
-        let reader = BufReader::new(cursor);
-        // tokens
-        let tokens = self.tokenizer.split_func(cursor);
-        for token in tokens {
-            println!("{}", token);
+    pub fn update(&mut self, doc_id: DocumentID, collection: &[u8]) {
+        let mut position: i32 = 0;
+        let terms = self.tokenizer.split_func(collection);
+        for term in terms {
+            if !self.index.dictionary.contains_key(&term) {
+                let postings = [Posting::new(doc_id, [position].to_vec())].to_vec();
+                self.index
+                    .dictionary
+                    .insert(term, PostingList::new(postings));
+            } else {
+                let posting_list = self.index.dictionary.get_mut(&term).unwrap();
+                posting_list.add(Posting::new(doc_id, [position].to_vec()));
+            };
+            position += 1;
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::io::Cursor;
+    use std::collections::HashMap;
 
     use super::*;
-
     #[test]
     fn update() {
         let collections = vec![
@@ -45,11 +49,50 @@ mod test {
         ];
         // init indexer
         let toknizer = Tokenizer::new();
-        let idxer = Indexer::new(toknizer);
+        let mut idxer = Indexer::new(toknizer);
         for (i, collection) in collections.iter().enumerate() {
-            // let c = Cursor::new(collection.as_bytes());
-            println!("{}:{}", i, collection);
             idxer.update(i as DocumentID, collection.as_bytes());
         }
+
+        let actual = idxer.index;
+
+        let mut posting_list_map: HashMap<String, PostingList> = HashMap::new();
+        posting_list_map.insert(
+            "better".to_string(),
+            PostingList::new(vec![Posting::new(2, vec![1])]),
+        );
+        posting_list_map.insert(
+            "do".to_string(),
+            PostingList::new(vec![Posting::new(0, vec![0])]),
+        );
+        posting_list_map.insert(
+            "no".to_string(),
+            PostingList::new(vec![Posting::new(1, vec![2]), Posting::new(2, vec![0])]),
+        );
+        posting_list_map.insert(
+            "quarrel".to_string(),
+            PostingList::new(vec![Posting::new(0, vec![2]), Posting::new(1, vec![0])]),
+        );
+        posting_list_map.insert(
+            "sir".to_string(),
+            PostingList::new(vec![
+                Posting::new(0, vec![3]),
+                Posting::new(1, vec![1, 3]),
+                Posting::new(3, vec![1]),
+            ]),
+        );
+        posting_list_map.insert(
+            "well".to_string(),
+            PostingList::new(vec![Posting::new(3, vec![0])]),
+        );
+        posting_list_map.insert(
+            "you".to_string(),
+            PostingList::new(vec![Posting::new(0, vec![1])]),
+        );
+        let expected = Index {
+            dictionary: posting_list_map,
+            total_docs_size: 0 as i32,
+        };
+        assert_eq!(expected, actual);
     }
 }
