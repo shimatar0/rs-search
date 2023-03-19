@@ -1,3 +1,5 @@
+mod document_store;
+mod engine;
 mod index;
 mod indexer;
 mod tokenizer;
