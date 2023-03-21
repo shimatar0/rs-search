@@ -1,38 +1,80 @@
-pub struct DocumentStore {}
+use sqlx::{mysql::MySqlPoolOptions, pool, Error, MySql, Pool, Row};
 
-#[cfg(test)]
-mod test {
-    use sqlx::{mysql::MySqlPoolOptions, Row};
+use crate::index::DocumentID;
 
-    fn setup() {
-        println!("aiueo");
-    }
+pub struct DocumentStore {
+    pool: Pool<MySql>,
+}
 
-    #[tokio::test]
-    async fn save() {
+impl DocumentStore {
+    pub async fn new() -> Self {
         let database_url = format!(
             "mysql://{}@{}:{}/{}",
             "root", "localhost", "3306", "tinysearch"
         );
-        println!("{}", database_url);
         let pool = MySqlPoolOptions::new()
             .max_connections(1)
             .connect(&database_url)
             .await
             .unwrap();
+        DocumentStore { pool }
+    }
 
-        let rows = sqlx::query(
+    pub async fn save(&self, title: String) -> DocumentID {
+        sqlx::query(
             r#"
-            SELECT * FROM documents
+            INSERT INTO documents (document_title) VALUES (?)
         "#,
         )
-        .fetch_all(&pool)
+        .bind(title)
+        .execute(&self.pool)
         .await
         .unwrap();
 
+        let last_insert_id = sqlx::query_as::<_, (u32,)>(
+            r#"
+            SELECT LAST_INSERT_ID();
+        "#,
+        )
+        .fetch_one(&self.pool)
+        .await
+        .unwrap()
+        .0;
+
+        return last_insert_id as DocumentID;
+    }
+
+    pub async fn get_rows(&self) {
+        let query: String = r#"
+            SELECT * FROM documents
+        "#
+        .to_owned();
+        let rows = sqlx::query(&query).fetch_all(&self.pool).await.unwrap();
         for row in rows {
-            let id: i32 = row.get("id");
+            let id: u32 = row.get("document_id");
             println!("{}", id);
         }
+    }
+
+    pub async fn truncate_table(&self) -> Result<(), Error> {
+        sqlx::query(&format!("TRUNCATE TABLE documents"))
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::document_store::DocumentStore;
+
+    #[tokio::test]
+    async fn save() {
+        let data_store: DocumentStore = DocumentStore::new().await;
+        let id = data_store.save("test".to_string()).await;
+        println!("{}", id);
+        // data_store.get_rows().await;
+        //data_store.truncate_table().await.unwrap();
     }
 }

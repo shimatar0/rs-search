@@ -1,5 +1,6 @@
 use std::str::from_utf8;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Tokenizer {}
 
 impl Tokenizer {
