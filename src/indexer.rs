@@ -31,6 +31,7 @@ impl Indexer {
             };
             position += 1;
         }
+        self.index.total_docs_size += 1;
     }
 }
 
@@ -91,7 +92,7 @@ mod test {
         );
         let expected = Index {
             dictionary: posting_list_map,
-            total_docs_size: 0 as i32,
+            total_docs_size: 4 as i32,
         };
         assert_eq!(expected, actual);
     }
