@@ -1,5 +1,7 @@
 use std::collections::{HashMap, LinkedList};
 
+use serde::{Deserialize, Serialize};
+
 pub type DocumentID = i64;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -18,7 +20,7 @@ impl Index {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Posting {
     doc_id: DocumentID,
     positions: Vec<i32>,
@@ -35,7 +37,7 @@ impl Posting {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PostingList {
     list: LinkedList<Posting>,
 }

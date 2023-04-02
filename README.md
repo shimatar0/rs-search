@@ -1,1 +1,1 @@
-# tinysearch-rs
+# rs-search

@@ -4,8 +4,8 @@ use crate::{
 };
 
 pub struct Indexer {
-    index: Index,
-    tokenizer: Tokenizer,
+    pub index: Index,
+    pub tokenizer: Tokenizer,
 }
 
 impl Indexer {
