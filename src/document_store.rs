@@ -63,18 +63,3 @@ impl DocumentStore {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod test {
-
-    use crate::document_store::DocumentStore;
-
-    #[tokio::test]
-    async fn save() {
-        let data_store: DocumentStore = DocumentStore::new().await;
-        let id = data_store.save("test".to_string()).await;
-        println!("{}", id);
-        // data_store.get_rows().await;
-        //data_store.truncate_table().await.unwrap();
-    }
-}

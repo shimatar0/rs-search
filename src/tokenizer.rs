@@ -26,10 +26,6 @@ impl Tokenizer {
             .filter(|word| !word.is_empty())
             .collect()
     }
-
-    // fn text_to_word_sequesnce(text: &str) -> Vec<String> {
-
-    // }
 }
 
 #[cfg(test)]
