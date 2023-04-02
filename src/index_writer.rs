@@ -27,7 +27,7 @@ impl IndexWriter {
     }
 
     pub fn flush_posting_list_writer(dir: String, term: String, list: &PostingList) {
-        let data = serde_json::to_string(list).unwrap();
+        let data = serde_json::to_string(&list.list).unwrap();
         let binding = PathBuf::from(dir).join(term);
         let file_name = binding.to_str().unwrap();
         match File::create(file_name) {

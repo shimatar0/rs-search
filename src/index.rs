@@ -39,7 +39,7 @@ impl Posting {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PostingList {
-    list: LinkedList<Posting>,
+    pub list: LinkedList<Posting>,
 }
 
 impl PostingList {
