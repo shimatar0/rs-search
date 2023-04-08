@@ -22,9 +22,9 @@ impl Index {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Posting {
-    doc_id: DocumentID,
-    positions: Vec<i32>,
-    term_frequency: i32,
+    pub doc_id: DocumentID,
+    pub positions: Vec<i32>,
+    pub term_frequency: i32,
 }
 
 impl Posting {
@@ -37,7 +37,7 @@ impl Posting {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct PostingList {
     pub list: LinkedList<Posting>,
 }

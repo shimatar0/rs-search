@@ -1,4 +1,4 @@
-use std::{env, fmt::write};
+use std::env;
 
 use crate::{
     document_store::DocumentStore, index_writer::IndexWriter, indexer::Indexer,
