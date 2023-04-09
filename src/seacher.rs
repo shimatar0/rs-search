@@ -85,9 +85,11 @@ impl Searcher {
                 }
             }
             if next_doc_id > 0 {
-                while let Some(posting) = front_iter.next() {
+                while let Some(posting) = front_iter.peek() {
                     if posting.doc_id >= next_doc_id {
                         break;
+                    } else {
+                        front_iter.next();
                     }
                 }
             } else {
@@ -157,7 +159,7 @@ mod tests {
     #[test]
     fn searcher() {
         let mut s = Searcher::new("./_index_data".to_string());
-        let q = vec!["do".to_string(), "sir".to_string()];
+        let q = vec!["no".to_string(), "sir".to_string()];
         let docs = s.search(q);
         println!("{:?}", docs);
     }
