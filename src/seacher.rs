@@ -22,7 +22,7 @@ pub struct Searcher {
 }
 
 #[derive(Debug)]
-struct ClacIFIDF {
+struct CalcIFIDF {
     term_freq: i32,
     doc_count: i32,
 }
@@ -50,7 +50,7 @@ impl Searcher {
 
         while let Some(front) = front_iter.next() {
             let mut next_doc_id: DocumentID = 0;
-            let mut calc_doc_list: Vec<ClacIFIDF> = Vec::new();
+            let mut calc_doc_list: Vec<CalcIFIDF> = Vec::new();
 
             for other in other_iter.clone() {
                 let mut list_iter = other.iter().peekable();
@@ -69,11 +69,11 @@ impl Searcher {
                         calc_doc_list.clear();
                         break;
                     } else {
-                        let calc_data = ClacIFIDF {
+                        let calc_data = CalcIFIDF {
                             term_freq: current.unwrap().term_frequency,
                             doc_count: other.len() as i32,
                         };
-                        let front_calc_data = ClacIFIDF {
+                        let front_calc_data = CalcIFIDF {
                             term_freq: front.term_frequency,
                             doc_count: self.cursor[0].len() as i32,
                         };
@@ -127,7 +127,7 @@ impl Searcher {
         };
     }
 
-    fn calc_score(&self, doc_list: Vec<ClacIFIDF>) -> f64 {
+    fn calc_score(&self, doc_list: Vec<CalcIFIDF>) -> f64 {
         let mut score: f64 = 0.0;
         for doc in doc_list {
             let term_freq = doc.term_freq;
