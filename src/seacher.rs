@@ -21,6 +21,12 @@ pub struct Searcher {
     cursor: Vec<LinkedList<Posting>>,
 }
 
+#[derive(Debug)]
+struct ClacIFIDF {
+    term_freq: i32,
+    doc_count: i32,
+}
+
 impl Searcher {
     pub fn new(path: String) -> Self {
         return Searcher {
@@ -40,16 +46,18 @@ impl Searcher {
 
         let posting_iter = self.cursor.clone();
         let mut front_iter = posting_iter[0].iter().peekable();
-        let mut other_iter = posting_iter[1..].iter().peekable();
+        let other_iter = posting_iter[1..].to_vec();
 
         while let Some(front) = front_iter.next() {
             let mut next_doc_id: DocumentID = 0;
+            let mut calc_doc_list: Vec<ClacIFIDF> = Vec::new();
 
-            while let Some(other) = other_iter.next() {
-                let mut list_iter = other.iter();
+            for other in other_iter.clone() {
+                let mut list_iter = other.iter().peekable();
                 let mut current = None;
-                while let Some(item) = list_iter.next() {
+                while let Some(item) = list_iter.peek().cloned() {
                     current = Some(item);
+                    list_iter.next();
                     if item.doc_id >= front.doc_id {
                         break;
                     }
@@ -58,7 +66,19 @@ impl Searcher {
                 if let Some(c) = current {
                     if c.doc_id != front.doc_id {
                         next_doc_id = c.doc_id;
+                        calc_doc_list.clear();
                         break;
+                    } else {
+                        let calc_data = ClacIFIDF {
+                            term_freq: current.unwrap().term_frequency,
+                            doc_count: other.len() as i32,
+                        };
+                        let front_calc_data = ClacIFIDF {
+                            term_freq: front.term_frequency,
+                            doc_count: self.cursor[0].len() as i32,
+                        };
+                        calc_doc_list.push(calc_data);
+                        calc_doc_list.push(front_calc_data);
                     }
                 } else {
                     return docs;
@@ -71,10 +91,9 @@ impl Searcher {
                     }
                 }
             } else {
-                println!("{:?}", front);
                 let score_doc: ScoreDoc = ScoreDoc {
                     doc_id: front.doc_id,
-                    score: self.calc_score(),
+                    score: self.calc_score(calc_doc_list),
                 };
                 docs.push(score_doc);
             }
@@ -108,18 +127,13 @@ impl Searcher {
         };
     }
 
-    fn calc_score(&self) -> f64 {
+    fn calc_score(&self, doc_list: Vec<ClacIFIDF>) -> f64 {
         let mut score: f64 = 0.0;
-        let mut list_iter = self.cursor.iter();
-        while let Some(list) = list_iter.next() {
-            let mut postings = list.iter();
-            let mut doc_count = postings.len() as i32;
-            println!("{}", doc_count);
-            while let Some(posting) = postings.next() {
-                let term_freq = posting.term_frequency;
-                let total_doc_cnt = 10;
-                score += self.calc_tf(term_freq) * self.calc_idf(total_doc_cnt, doc_count);
-            }
+        for doc in doc_list {
+            let term_freq = doc.term_freq;
+            let doc_count = doc.doc_count;
+            let total_doc_cnt = 10;
+            score += self.calc_tf(term_freq) + self.calc_idf(total_doc_cnt, doc_count);
         }
         score
     }
@@ -143,7 +157,7 @@ mod tests {
     #[test]
     fn searcher() {
         let mut s = Searcher::new("./_index_data".to_string());
-        let q = vec!["do".to_string(), "you".to_string()];
+        let q = vec!["do".to_string(), "sir".to_string()];
         let docs = s.search(q);
         println!("{:?}", docs);
     }
