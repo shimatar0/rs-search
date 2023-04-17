@@ -78,7 +78,6 @@ impl Searcher {
                             doc_count: self.cursor[0].len() as i32,
                         };
                         calc_doc_list.push(calc_data);
-                        calc_doc_list.push(front_calc_data);
                     }
                 } else {
                     return docs;
@@ -93,6 +92,11 @@ impl Searcher {
                     }
                 }
             } else {
+                let front_calc_data = CalcIFIDF {
+                    term_freq: front.term_frequency,
+                    doc_count: self.cursor[0].len() as i32,
+                };
+                calc_doc_list.push(front_calc_data);
                 let score_doc: ScoreDoc = ScoreDoc {
                     doc_id: front.doc_id,
                     score: self.calc_score(calc_doc_list),
@@ -121,8 +125,13 @@ impl Searcher {
     }
 
     pub fn search_top_k(mut self, query: Vec<String>, k: i32) -> TopDocs {
-        let result = self.search(query);
+        let mut result = self.search(query);
+        result.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        let total_hits = result.len() as i32;
 
+        if total_hits > k {
+            result.truncate(k as usize);
+        }
         return TopDocs {
             total_hits: result.len() as i32,
             score_docs: result,
@@ -134,7 +143,7 @@ impl Searcher {
         for doc in doc_list {
             let term_freq = doc.term_freq;
             let doc_count = doc.doc_count;
-            let total_doc_cnt = 10;
+            let total_doc_cnt = 5;
             score += self.calc_tf(term_freq) + self.calc_idf(total_doc_cnt, doc_count);
         }
         score
@@ -159,7 +168,7 @@ mod tests {
     #[test]
     fn searcher() {
         let mut s = Searcher::new("./_index_data".to_string());
-        let q = vec!["no".to_string(), "sir".to_string()];
+        let q = vec!["sir".to_string(), "no".to_string()];
         let docs = s.search(q);
         println!("{:?}", docs);
     }
